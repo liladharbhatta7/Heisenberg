@@ -1,0 +1,78 @@
+.App {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-indicator.streaming {
+  background-color: #dc3545;
+  color: white;
+}
+
+.status-indicator.stopped {
+  background-color: #6c757d;
+  color: white;
+}
+
+.detection-item {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.drop-zone {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.drop-zone:hover {
+  background-color: #e9ecef !important;
+  border-color: #007bff !important;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  font-weight: 600;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.badge {
+  font-size: 0.75em;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
