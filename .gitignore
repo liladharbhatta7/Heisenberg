@@ -1,0 +1,37 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore environment variables
+.env
+.env.*
+
+# Ignore OS-specific files
+*.swp
+*.swo
+
+# Ignore build output and dependencies in frontend/
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.DS_Store
+frontend/npm-debug.log
+frontend/yarn-debug.log
+frontend/yarn-error.log
+
+# If using Yarn Plug'n'Play
+frontend/.pnp/
+frontend/.pnp.js
+
+# Optional: Ignore editor settings
+.vscode/
+.idea/
+
+# Optional: Ignore backend files if applicable
+backend/node_modules/
+backend/.env
+backend/.DS_Store
