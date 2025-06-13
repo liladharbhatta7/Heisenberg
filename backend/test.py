@@ -8,7 +8,7 @@ MODEL_PATH     = "yolov8s.pt"
 
 # Build absolute path to video file, relative to this script:
 SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
-VIDEO_SOURCE   = os.path.join(SCRIPT_DIR, "Video_for_test_lb4.mp4")  # or change filename here
+VIDEO_SOURCE   = os.path.join(SCRIPT_DIR, "Video_for_test_lb.mp4")  # or change filename here
 
 # Sanity‑check that the video file exists:
 if not os.path.isfile(VIDEO_SOURCE):
