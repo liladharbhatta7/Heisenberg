@@ -50,6 +50,36 @@ const CombinedDetection = () => {
     }
   }, [result?.accident_detected]);
 
+  // Email notification function
+  const sendAccidentAlert = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Accident detected in uploaded media",
+          timestamp: new Date().toISOString(),
+          confidence: result?.confidence || 0,
+          fileType: selectedFile?.type || "unknown",
+          fileName: selectedFile?.name || "unknown",
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to send email notification");
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        console.log("Email notification sent successfully");
+        setProcessingStatus("📧 Accident alert sent successfully!");
+      }
+    } catch (error) {
+      console.error("Error sending email notification:", error);
+      setProcessingStatus("⚠️ Alert sent but email notification failed");
+    }
+  };
+
   const checkCurrentVideo = async () => {
     try {
       const response = await fetch("http://localhost:8000/current-live-video");
@@ -147,7 +177,7 @@ const CombinedDetection = () => {
     return progressInterval;
   };
 
-  // Combined function for detection and live preview
+  // Combined function for detection and live preview with email notification
   const processFileAndStartLive = async () => {
     if (!selectedFile) return;
 
@@ -199,7 +229,7 @@ const CombinedDetection = () => {
           "http://localhost:8000/detect-video",
           {
             method: "POST",
-            body: formData,
+            body: detectFormData,
           }
         );
 
@@ -213,12 +243,20 @@ const CombinedDetection = () => {
         }
 
         const detectData = await detectResponse.json();
-        setResult({
+        const videoResult = {
           type: "video",
           ...detectData,
-        });
+        };
+
+        setResult(videoResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
+
+        // Send email notification if accident is detected
+        if (videoResult.accident_detected) {
+          setProcessingStatus("📧 Sending accident alert...");
+          await sendAccidentAlert();
+        }
       } else {
         // For images, show simple progress
         setProcessingStatus("⏳ Processing image analysis...");
@@ -241,12 +279,20 @@ const CombinedDetection = () => {
         }
 
         const data = await response.json();
-        setResult({
+        const imageResult = {
           type: "image",
           ...data,
-        });
+        };
+
+        setResult(imageResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
+
+        // Send email notification if accident is detected
+        if (imageResult.accident_detected) {
+          setProcessingStatus("📧 Sending accident alert...");
+          await sendAccidentAlert();
+        }
       }
     } catch (error) {
       console.error("Error processing file:", error);
@@ -432,13 +478,15 @@ const CombinedDetection = () => {
                 marginBottom: "20px",
                 backgroundColor: processingStatus.includes("❌")
                   ? "#f8d7da"
-                  : processingStatus.includes("✅")
+                  : processingStatus.includes("✅") ||
+                    processingStatus.includes("📧")
                   ? "#d4edda"
                   : "#e3f2fd",
                 border: `2px solid ${
                   processingStatus.includes("❌")
                     ? "#dc3545"
-                    : processingStatus.includes("✅")
+                    : processingStatus.includes("✅") ||
+                      processingStatus.includes("📧")
                     ? "#28a745"
                     : "#2196f3"
                 }`,
@@ -446,7 +494,8 @@ const CombinedDetection = () => {
                 textAlign: "center",
                 color: processingStatus.includes("❌")
                   ? "#721c24"
-                  : processingStatus.includes("✅")
+                  : processingStatus.includes("✅") ||
+                    processingStatus.includes("📧")
                   ? "#155724"
                   : "#1565c0",
                 fontWeight: "bold",
@@ -567,7 +616,7 @@ const CombinedDetection = () => {
               transition: "all 0.3s ease",
             }}
           >
-            🎥 Live Detection Stream
+            Live Detection Stream
           </h3>
           <div style={{ textAlign: "center" }}>
             <div
@@ -731,6 +780,15 @@ const CombinedDetection = () => {
                   >
                     ⚠️ IMMEDIATE ATTENTION REQUIRED ⚠️
                   </p>
+                  <p
+                    style={{
+                      color: "#d32f2f",
+                      fontSize: "14px",
+                      margin: "5px 0 0 0",
+                    }}
+                  >
+                    📧 Emergency notification has been sent
+                  </p>
                 </div>
               )}
             </div>
@@ -781,10 +839,10 @@ const App = () => {
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <h1 style={{ color: "#333", marginBottom: "10px" }}>
-          🚗 AI-Powered Accident Detection System
+          Accident Detection System by team Team Heisenberg
         </h1>
         <p style={{ color: "#666", fontSize: "18px" }}>
-          Real-time analysis with frame-by-frame progress tracking
+          Real-time analysis with automated email alerts
         </p>
 
         {/* Server Status */}
@@ -819,9 +877,13 @@ const App = () => {
 
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "40px", color: "#666" }}>
-        <p>Built with React + FastAPI + YOLOv8</p>
+        <p>
+          <strong>Team Heisenberg</strong> | Automatic Accident Detection &
+          Response System
+        </p>
         <p style={{ fontSize: "12px", marginTop: "10px" }}>
-          🎯 Frame-by-frame processing with real-time progress tracking
+          🎯 Frame-by-frame video analysis with real-time alerts via email and
+          buzzer
         </p>
       </div>
     </div>
