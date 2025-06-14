@@ -36,3 +36,8 @@ backend/node_modules/
 backend/.env
 backend/.DS_Store
 backend/venv/
+
+mailer/node_modules/
+mailer/.env
+mailer/.DS_Store
+mailer/venv/
