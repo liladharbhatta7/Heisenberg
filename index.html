@@ -1,65 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>📍 Location Tracker</title>
+  <title>📍 Kathmandu Location Tracker with Epic Center</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 20px;
+      margin: 0;
+      color: #333;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .tracker-card {
-      max-width: 500px;
+      max-width: 700px;
       width: 100%;
       padding: 30px;
-      background: #ffffff;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .tracker-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+      z-index: -1;
     }
 
     .status-badge {
-      font-size: 0.95em;
-      padding: 10px;
-      margin-top: 10px;
+      font-size: 1.05em;
+      padding: 14px 18px;
+      margin: 20px 0;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      background: rgba(241, 243, 245, 0.7);
+      text-align: center;
     }
 
     .last-location {
-      font-size: 0.95em;
-      background: #f1f3f5;
-      border-radius: 10px;
-      padding: 15px;
-      margin-top: 20px;
-      line-height: 1.5;
-      cursor: pointer;
+      font-size: 1em;
+      background: linear-gradient(120deg, #e0f7fa, #f1f8e9);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 25px 0;
+      line-height: 1.6;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+      border-left: 5px solid #42a5f5;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .last-location:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .last-location::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(66, 165, 245, 0.05), rgba(30, 136, 229, 0.05));
+      z-index: 0;
     }
 
     .icon {
-      font-size: 1.5em;
+      font-size: 1.7em;
       vertical-align: middle;
+      margin-right: 12px;
     }
 
     .fade-in {
-      animation: fadeIn 0.6s ease-in-out;
+      animation: fadeIn 0.8s ease-out;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     #map {
@@ -75,32 +148,317 @@
     #closeMap {
       display: none;
       position: fixed;
-      top: 15px;
-      right: 20px;
+      top: 25px;
+      right: 30px;
       z-index: 10000;
-      background: #ffffffcc;
-      padding: 8px 12px;
-      border-radius: 8px;
+      background: #ffffff;
+      padding: 12px 22px;
+      border-radius: 50px;
       cursor: pointer;
       font-weight: bold;
-      border: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border: 2px solid #1565c0;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s;
+      font-size: 1.1em;
+    }
+
+    #closeMap:hover {
+      background: #e3f2fd;
+      transform: scale(1.08);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .locations-container {
+      margin-top: 30px;
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 15px;
+      padding: 10px;
+      background: rgba(241, 243, 245, 0.6);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .location-card {
+      padding: 18px;
+      margin: 12px 0;
+      border-radius: 15px;
+      background: white;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      transition: all 0.3s;
+      border-left: 5px solid #42a5f5;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .location-card:hover {
+      background: linear-gradient(120deg, #e3f2fd, #f5f5f5);
+      transform: translateX(8px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .location-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(66, 165, 245, 0.05), rgba(30, 136, 229, 0.05));
+      z-index: 0;
+    }
+
+    .location-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e88e5, #0d47a1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 18px;
+      flex-shrink: 0;
+      z-index: 1;
+      box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+    }
+
+    .location-icon i {
+      color: white;
+      font-size: 1.4em;
+    }
+
+    .location-info {
+      flex-grow: 1;
+      z-index: 1;
+    }
+
+    .location-name {
+      font-weight: 700;
+      color: #1a237e;
+      margin-bottom: 8px;
+      font-size: 1.15em;
+    }
+
+    .location-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95em;
+      color: #546e7a;
+    }
+
+    .distance-badge {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      color: #0d47a1;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      margin: 30px 0 20px;
+      color: #0d47a1;
+      display: flex;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #bbdefb;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-weight: 700;
+    }
+
+    .section-title i {
+      margin-right: 15px;
+      color: #1e88e5;
+      font-size: 1.5em;
+    }
+
+    /* Scrollbar styling */
+    .locations-container::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .locations-container::-webkit-scrollbar-track {
+      background: rgba(225, 245, 254, 0.5);
+      border-radius: 10px;
+    }
+
+    .locations-container::-webkit-scrollbar-thumb {
+      background: #64b5f6;
+      border-radius: 10px;
+    }
+
+    .locations-container::-webkit-scrollbar-thumb:hover {
+      background: #1e88e5;
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(66, 165, 245, 0.7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 15px rgba(66, 165, 245, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(66, 165, 245, 0);
+      }
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .header h1 {
+      color: #0d47a1;
+      font-weight: 800;
+      margin: 0;
+      font-size: 2.2rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h2 {
+      color: #1e88e5;
+      font-weight: 600;
+      margin-top: 10px;
+      font-size: 1.3rem;
+    }
+
+    .logo {
+      background: linear-gradient(135deg, #1e88e5, #0d47a1);
+      color: white;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(30, 136, 229, 0.4);
+      font-size: 2.5rem;
+    }
+
+    .epic-center-label {
+      position: absolute;
+      background: rgba(123, 31, 162, 0.9);
+      color: white;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1.1em;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    .instructions {
+      background: rgba(30, 136, 229, 0.1);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 0.95em;
+      border-left: 4px solid #1e88e5;
+    }
+
+    .center-point {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .center-point div {
+      background: #1e88e5;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+    }
+
+    @media (max-width: 576px) {
+      .tracker-card {
+        padding: 20px 15px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .location-card {
+        padding: 15px;
+      }
+
+      .location-icon {
+        width: 45px;
+        height: 45px;
+        margin-right: 12px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="tracker-card text-center fade-in">
-    <h2 class="mb-3"><i class="fas fa-map-marker-alt text-primary icon"></i> Location Tracker</h2>
-    <div id="status" class="alert alert-secondary status-badge">Requesting location...</div>
-    <div id="lastLocation" class="last-location text-start">
-      <i class="fas fa-map-pin text-primary"></i> Tap to view map...
+  <div class="tracker-card fade-in">
+    <div class="header">
+      <div class="logo">
+        <i class="fas fa-map-marked-alt"></i>
+      </div>
+      <h1>Kathmandu Location Tracker</h1>
+      <h2>With Epic Center Visualization</h2>
+    </div>
+
+    <div class="center-point">
+      <div>
+        <i class="fas fa-crosshairs"></i> Center Point: 27.6716° N, 85.3392° E
+      </div>
+    </div>
+
+    <div class="instructions">
+      <i class="fas fa-info-circle text-primary"></i> This app shows your location along with 10 points of interest in
+      Kathmandu. The epic center is calculated as the midpoint of all locations.
+    </div>
+
+    <div id="status" class="alert alert-secondary status-badge text-center">
+      <i class="fas fa-satellite"></i> Detecting your location...
+    </div>
+
+    <div id="lastLocation" class="last-location">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-location-crosshairs text-primary icon"></i>
+        <strong style="font-size: 1.2em;">Your location will appear here</strong>
+      </div>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary btn-lg" onclick="showUserOnMap()" disabled id="showMapBtn">
+          <i class="fas fa-map-marked-alt me-2"></i> Show My Location on Map
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <h5 class="section-title"><i class="fas fa-map-marker-alt"></i> Nearby Points of Interest</h5>
+      <div class="locations-container" id="locationsContainer">
+        <!-- Nearby locations will be generated here -->
+      </div>
     </div>
   </div>
 
   <!-- Fullscreen Map -->
   <div id="map"></div>
-  <button id="closeMap">Close Map</button>
+  <button id="closeMap" class="pulse"><i class="fas fa-times me-2"></i> Close Map</button>
 
   <!-- Bootstrap Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -140,96 +498,428 @@
 
   <!-- App Script -->
   <script>
+    // Central point (Kathmandu, Nepal)
+    const CENTER_LAT = 27.671550357778724;
+    const CENTER_LNG = 85.33921712723657;
+
     let currentLat = null;
     let currentLon = null;
-    let map, marker;
+    let map, markers = [];
+    let epicCenterMarker = null;
 
-    async function initMap(lat, lon) {
-      const { Map } = await google.maps.importLibrary("maps");
-      const { Marker } = await google.maps.importLibrary("marker");
+    // Predefined locations within Kathmandu
+    const nearbyLocations = [
+      {
+        id: 1,
+        name: "Pashupatinath Temple",
+        type: "Religious Site",
+        lat: 27.7107,
+        lng: 85.3483,
+        distance: 4.5,
+        icon: "fas fa-place-of-worship"
+      },
+      {
+        id: 2,
+        name: "Boudhanath Stupa",
+        type: "Buddhist Shrine",
+        lat: 27.7214,
+        lng: 85.3621,
+        distance: 6.2,
+        icon: "fas fa-stroopwafel"
+      },
+      {
+        id: 3,
+        name: "Garden of Dreams",
+        type: "Historic Garden",
+        lat: 27.7136,
+        lng: 85.3179,
+        distance: 4.8,
+        icon: "fas fa-tree"
+      },
+      {
+        id: 4,
+        name: "Narayanhiti Palace Museum",
+        type: "Historical Palace",
+        lat: 27.7171,
+        lng: 85.3183,
+        distance: 5.1,
+        icon: "fas fa-landmark"
+      },
+      {
+        id: 5,
+        name: "Swayambhunath Stupa",
+        type: "Buddhist Temple",
+        lat: 27.7152,
+        lng: 85.2903,
+        distance: 7.3,
+        icon: "fas fa-stroopwafel"
+      },
+      {
+        id: 6,
+        name: "Kathmandu Durbar Square",
+        type: "Historical Square",
+        lat: 27.7044,
+        lng: 85.3073,
+        distance: 4.0,
+        icon: "fas fa-monument"
+      },
+      {
+        id: 7,
+        name: "Thamel Market",
+        type: "Shopping District",
+        lat: 27.7147,
+        lng: 85.3120,
+        distance: 4.8,
+        icon: "fas fa-shopping-cart"
+      },
+      {
+        id: 8,
+        name: "Kopan Monastery",
+        type: "Buddhist Monastery",
+        lat: 27.7465,
+        lng: 85.3565,
+        distance: 8.5,
+        icon: "fas fa-pray"
+      },
+      {
+        id: 9,
+        name: "Chandragiri Hills",
+        type: "Mountain Viewpoint",
+        lat: 27.6554,
+        lng: 85.2267,
+        distance: 9.2,
+        icon: "fas fa-mountain"
+      },
+      {
+        id: 10,
+        name: "Budhanilkantha Temple",
+        type: "Hindu Temple",
+        lat: 27.7801,
+        lng: 85.3621,
+        distance: 12.1,
+        icon: "fas fa-place-of-worship"
+      }
+    ];
 
-      map = new Map(document.getElementById("map"), {
-        center: { lat, lng: lon },
-        zoom: 16,
+    // Calculate epic center (midpoint of all locations)
+    function calculateEpicCenter() {
+      let sumLat = 0;
+      let sumLng = 0;
+
+      nearbyLocations.forEach(location => {
+        sumLat += location.lat;
+        sumLng += location.lng;
       });
 
-      marker = new Marker({
-        position: { lat, lng: lon },
-        map,
-        title: "Your Current Location"
+      return {
+        lat: sumLat / nearbyLocations.length,
+        lng: sumLng / nearbyLocations.length
+      };
+    }
+
+    const epicCenter = calculateEpicCenter();
+
+    // Function to calculate distance between two points
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    }
+
+    // Generate location cards
+    function renderNearbyLocations() {
+      const container = document.getElementById('locationsContainer');
+      container.innerHTML = '';
+
+      nearbyLocations.forEach(loc => {
+        const card = document.createElement('div');
+        card.className = 'location-card';
+        card.innerHTML = `
+          <div class="location-icon">
+            <i class="${loc.icon}"></i>
+          </div>
+          <div class="location-info">
+            <div class="location-name">${loc.name}</div>
+            <div class="location-details">
+              <span>${loc.type}</span>
+              <span class="distance-badge">${loc.distance.toFixed(1)} km</span>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          document.getElementById("map").style.display = "block";
+          document.getElementById("closeMap").style.display = "block";
+          initMap(loc.lat, loc.lng, loc.name);
+          showLocationOnMap(loc.lat, loc.lng, loc.name);
+        });
+
+        container.appendChild(card);
       });
     }
 
+    async function initMap(lat, lng, title = "Your Location") {
+      const { Map } = await google.maps.importLibrary("maps");
+      const { Marker } = await google.maps.importLibrary("marker");
+      const { InfoWindow } = await google.maps.importLibrary("maps");
+
+      // Clear previous map if exists
+      if (map) {
+        map.setCenter({ lat, lng });
+        markers.forEach(marker => marker.setMap(null));
+        markers = [];
+        if (epicCenterMarker) epicCenterMarker.setMap(null);
+      } else {
+        map = new Map(document.getElementById("map"), {
+          center: { lat, lng },
+          zoom: 13,
+          styles: [
+            {
+              "featureType": "administrative",
+              "elementType": "geometry",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "poi",
+              "stylers": [{ "visibility": "simplified" }]
+            },
+            {
+              "featureType": "road",
+              "elementType": "labels",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "transit",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "water",
+              "elementType": "labels",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "landscape",
+              "stylers": [{ "color": "#f5f5f5" }]
+            }
+          ]
+        });
+      }
+
+      // Add all nearby locations to map
+      nearbyLocations.forEach(loc => {
+        const marker = new Marker({
+          position: { lat: loc.lat, lng: loc.lng },
+          map: map,
+          title: loc.name,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: "#FF5252",
+            fillOpacity: 1,
+            strokeColor: "#B71C1C",
+            strokeWeight: 2,
+            scale: 8
+          }
+        });
+
+        const infowindow = new InfoWindow({
+          content: `<div style="font-weight:bold;color:#1a237e;font-size:1.1em;">${loc.name}</div>
+                    <div>${loc.type}</div>
+                    <div>Distance: ${loc.distance.toFixed(1)} km</div>`
+        });
+
+        marker.addListener('click', () => {
+          infowindow.open(map, marker);
+          map.setCenter(marker.getPosition());
+          map.setZoom(16);
+        });
+
+        markers.push(marker);
+      });
+
+      // Add epic center marker
+      epicCenterMarker = new Marker({
+        position: epicCenter,
+        map: map,
+        title: "Epic Center",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: "#7B1FA2",
+          fillOpacity: 0.8,
+          strokeColor: "#4A148C",
+          strokeWeight: 3,
+          scale: 20  // Bigger than other markers
+        },
+        zIndex: 1000
+      });
+
+      const epicInfo = new InfoWindow({
+        content: `<div style="font-weight:bold;color:#4A148C;font-size:1.2em;">EPIC CENTER</div>
+                  <div>Midpoint of all locations</div>
+                  <div>Calculated Position</div>`
+      });
+
+      epicCenterMarker.addListener('click', () => {
+        epicInfo.open(map, epicCenterMarker);
+      });
+
+      // Add label for epic center
+      const epicLabel = document.createElement('div');
+      epicLabel.className = 'epic-center-label';
+      epicLabel.textContent = 'EPIC CENTER';
+      epicLabel.style.top = (epicCenterMarker.getPosition().lat() + 0.001) + 'px';
+      epicLabel.style.left = epicCenterMarker.getPosition().lng() + 'px';
+
+      // Add current location marker
+      const currentMarker = new Marker({
+        position: { lat, lng },
+        map: map,
+        title: title,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: "#1E88E5",
+          fillOpacity: 1,
+          strokeColor: "#0D47A1",
+          strokeWeight: 2,
+          scale: 12
+        },
+        zIndex: 100
+      });
+
+      const currentInfo = new InfoWindow({
+        content: `<div style="font-weight:bold;color:#1a237e;">${title}</div>`
+      });
+
+      currentMarker.addListener('click', () => {
+        currentInfo.open(map, currentMarker);
+      });
+
+      markers.push(currentMarker);
+
+      // Open info window for current location
+      currentInfo.open(map, currentMarker);
+    }
+
+    function showLocationOnMap(lat, lng, title) {
+      if (!map) {
+        initMap(lat, lng, title);
+        return;
+      }
+
+      map.setCenter({ lat, lng });
+      map.setZoom(16);
+
+      // Highlight the clicked location
+      markers.forEach(marker => {
+        if (marker.getPosition().lat() === lat && marker.getPosition().lng() === lng) {
+          marker.setAnimation(google.maps.Animation.BOUNCE);
+          setTimeout(() => {
+            marker.setAnimation(null);
+          }, 1500);
+        }
+      });
+    }
+
+    function showUserOnMap() {
+      if (currentLat && currentLon) {
+        document.getElementById("map").style.display = "block";
+        document.getElementById("closeMap").style.display = "block";
+        initMap(currentLat, currentLon, "Your Location");
+      }
+    }
+
     function sendLocationToServer(lat, lon) {
-      fetch("http://localhost:5000/location", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          device_id: "browser-001",
-          latitude: lat,
-          longitude: lon,
-          timestamp: new Date().toISOString()
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
+      // Simulate server communication
+      setTimeout(() => {
         const statusEl = document.getElementById("status");
         const lastEl = document.getElementById("lastLocation");
+        const showMapBtn = document.getElementById("showMapBtn");
 
-        if (data.status === "success") {
-          statusEl.className = "alert alert-success status-badge";
-          statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Location saved to server.`;
-        } else if (data.status === "ignored") {
-          statusEl.className = "alert alert-warning status-badge";
-          statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Location unchanged. Not saved.`;
-        }
+        statusEl.className = "alert alert-success status-badge";
+        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Location detected successfully`;
+
+        const distance = calculateDistance(CENTER_LAT, CENTER_LNG, lat, lon).toFixed(1);
 
         lastEl.innerHTML = `
-          <strong>Last Location (click to view map):</strong><br>
-          <i class="fas fa-map-pin text-danger"></i> Latitude: ${lat}<br>
-          <i class="fas fa-map-pin text-primary"></i> Longitude: ${lon}
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-location-dot text-primary icon"></i>
+            <strong style="font-size: 1.2em;">Your Current Location</strong>
+          </div>
+          <div><i class="fas fa-map-pin text-danger me-2"></i> Latitude: ${lat.toFixed(6)}</div>
+          <div><i class="fas fa-map-pin text-primary me-2"></i> Longitude: ${lon.toFixed(6)}</div>
+          <div class="mt-3"><i class="fas fa-route text-success me-2"></i> Distance from Kathmandu center: ${distance} km</div>
+          <div class="text-center mt-4">
+            <button class="btn btn-primary btn-lg" onclick="showUserOnMap()" id="showMapBtn">
+              <i class="fas fa-map-marked-alt me-2"></i> Show My Location on Map
+            </button>
+          </div>
         `;
 
         currentLat = lat;
         currentLon = lon;
-      })
-      .catch(err => {
-        const statusEl = document.getElementById("status");
-        statusEl.className = "alert alert-danger status-badge";
-        statusEl.innerHTML = `<i class="fas fa-times-circle"></i> Failed to send location.`;
-        console.error("Error:", err);
-      });
+        showMapBtn.disabled = false;
+      }, 1500);
     }
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          sendLocationToServer(lat, lon);
-        },
-        () => {
-          document.getElementById("status").className = "alert alert-danger status-badge";
-          document.getElementById("status").innerHTML = `<i class="fas fa-ban"></i> Location access denied.`;
-        }
-      );
-    } else {
-      document.getElementById("status").className = "alert alert-danger status-badge";
-      document.getElementById("status").innerHTML = `<i class="fas fa-exclamation-triangle"></i> Geolocation not supported.`;
-    }
+    // Initialize the page
+    function initialize() {
+      renderNearbyLocations();
 
-    document.getElementById("lastLocation").addEventListener("click", () => {
-      if (currentLat && currentLon) {
-        document.getElementById("map").style.display = "block";
-        document.getElementById("closeMap").style.display = "block";
-        initMap(currentLat, currentLon);
+      // Display epic center info
+      const epicInfo = document.createElement('div');
+      epicInfo.className = 'alert alert-info status-badge text-center';
+      epicInfo.innerHTML = `
+        <i class="fas fa-bullseye"></i> Epic Center: 
+        ${epicCenter.lat.toFixed(6)}° N, ${epicCenter.lng.toFixed(6)}° E
+      `;
+      document.querySelector('.instructions').after(epicInfo);
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            sendLocationToServer(lat, lon);
+          },
+          () => {
+            document.getElementById("status").className = "alert alert-danger status-badge";
+            document.getElementById("status").innerHTML = `<i class="fas fa-ban"></i> Location access denied. Showing nearby locations only.`;
+            // Show center point if location access denied
+            lastEl = document.getElementById("lastLocation");
+            lastEl.innerHTML = `
+              <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-map-marker-alt text-primary icon"></i>
+                <strong style="font-size: 1.2em;">Kathmandu Center Point</strong>
+              </div>
+              <div><i class="fas fa-map-pin text-danger me-2"></i> Latitude: ${CENTER_LAT.toFixed(6)}</div>
+              <div><i class="fas fa-map-pin text-primary me-2"></i> Longitude: ${CENTER_LNG.toFixed(6)}</div>
+              <div class="text-center mt-4">
+                <button class="btn btn-primary btn-lg" onclick="showLocationOnMap(${CENTER_LAT}, ${CENTER_LNG}, 'Kathmandu Center')">
+                  <i class="fas fa-map-marked-alt me-2"></i> Show on Map
+                </button>
+              </div>
+            `;
+          }
+        );
+      } else {
+        document.getElementById("status").className = "alert alert-danger status-badge";
+        document.getElementById("status").innerHTML = `<i class="fas fa-exclamation-triangle"></i> Geolocation not supported. Showing nearby locations only.`;
       }
-    });
+    }
 
     document.getElementById("closeMap").addEventListener("click", () => {
       document.getElementById("map").style.display = "none";
       document.getElementById("closeMap").style.display = "none";
     });
+
+    // Initialize when page loads
+    window.addEventListener('load', initialize);
   </script>
 </body>
+
 </html>
