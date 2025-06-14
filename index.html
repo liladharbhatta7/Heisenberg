@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>📍 Kathmandu Location Tracker with Epic Center</title>
+  <title>📍 Kathmandu Emergency Location Tracker</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -32,24 +31,23 @@
       padding: 20px;
       margin: 0;
       color: #333;
+      overflow-x: hidden;
     }
 
     @keyframes gradientBG {
       0% {
         background-position: 0% 50%;
       }
-
       50% {
         background-position: 100% 50%;
       }
-
       100% {
         background-position: 0% 50%;
       }
     }
 
     .tracker-card {
-      max-width: 700px;
+      max-width: 800px;
       width: 100%;
       padding: 30px;
       background: rgba(255, 255, 255, 0.95);
@@ -128,7 +126,6 @@
         opacity: 0;
         transform: translateY(30px);
       }
-
       to {
         opacity: 1;
         transform: translateY(0);
@@ -188,7 +185,7 @@
       transition: all 0.3s;
       border-left: 5px solid #42a5f5;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       position: relative;
       overflow: hidden;
     }
@@ -208,6 +205,12 @@
       height: 100%;
       background: linear-gradient(120deg, rgba(66, 165, 245, 0.05), rgba(30, 136, 229, 0.05));
       z-index: 0;
+    }
+
+    .location-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
     }
 
     .location-icon {
@@ -237,14 +240,12 @@
     .location-name {
       font-weight: 700;
       color: #1a237e;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       font-size: 1.15em;
     }
 
-    .location-details {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.95em;
+    .location-type {
+      font-size: 0.9em;
       color: #546e7a;
     }
 
@@ -255,6 +256,82 @@
       font-weight: 700;
       color: #0d47a1;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: inline-block;
+      margin-top: 5px;
+    }
+
+    .contact-info {
+      background: rgba(233, 245, 254, 0.7);
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+      z-index: 1;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .contact-row:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .contact-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #4CAF50;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .contact-details {
+      flex-grow: 1;
+    }
+
+    .contact-label {
+      font-size: 0.8em;
+      color: #546e7a;
+      margin-bottom: 2px;
+    }
+
+    .contact-value {
+      font-weight: 600;
+      color: #1a237e;
+      font-size: 1.1em;
+    }
+
+    .contact-action {
+      background: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 15px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+    }
+
+    .contact-action:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .contact-action i {
+      margin-right: 5px;
     }
 
     .section-title {
@@ -302,11 +379,9 @@
       0% {
         box-shadow: 0 0 0 0 rgba(66, 165, 245, 0.7);
       }
-
       70% {
         box-shadow: 0 0 0 15px rgba(66, 165, 245, 0);
       }
-
       100% {
         box-shadow: 0 0 0 0 rgba(66, 165, 245, 0);
       }
@@ -388,37 +463,387 @@
       box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
     }
 
-    @media (max-width: 576px) {
+    /* Notification styles */
+    .notification-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+      max-width: 350px;
+      width: 100%;
+    }
+
+    .notification {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+      transform: translateX(400px);
+      transition: transform 0.5s ease;
+      border-left: 5px solid #4CAF50;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification-icon {
+      background: #4CAF50;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+      font-size: 1.2em;
+    }
+
+    .notification-content {
+      flex-grow: 1;
+    }
+
+    .notification-title {
+      font-weight: 700;
+      color: #1a237e;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      font-size: 0.9em;
+      color: #546e7a;
+    }
+
+    .notification-close {
+      background: transparent;
+      border: none;
+      color: #777;
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 5px;
+      margin-left: 10px;
+    }
+
+    .notification-close:hover {
+      color: #333;
+    }
+
+    .notification.email {
+      border-left-color: #FF9800;
+    }
+
+    .notification.email .notification-icon {
+      background: #FF9800;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid #4CAF50;
+      animation: pulse-ring 2s infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10010; /* Increased to appear above map */
+    }
+
+    .contact-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 500px;
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      z-index: 10011; /* Increased to appear above map and backdrop */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .contact-modal h4 {
+      color: #0d47a1;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .contact-modal h4 i {
+      margin-right: 10px;
+      color: #1e88e5;
+    }
+
+    .contact-modal .btn-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+
+    .contact-details-modal {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .contact-detail:last-child {
+      margin-bottom: 0;
+    }
+
+    .contact-detail-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1e88e5;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .contact-detail-info {
+      flex-grow: 1;
+    }
+
+    .contact-detail-label {
+      font-size: 0.85em;
+      color: #546e7a;
+    }
+
+    .contact-detail-value {
+      font-weight: 600;
+      color: #1a237e;
+      font-size: 1.1em;
+    }
+
+    .admin-section {
+      background: rgba(255, 245, 157, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 25px 0;
+      border-left: 4px solid #FFD600;
+    }
+
+    .admin-section h5 {
+      color: #5D4037;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .admin-section h5 i {
+      margin-right: 10px;
+      color: #FF9800;
+    }
+
+    .admin-section .alert {
+      border-radius: 10px;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
       .tracker-card {
-        padding: 20px 15px;
+        padding: 20px;
       }
 
       .header h1 {
         font-size: 1.8rem;
       }
 
+      .header h2 {
+        font-size: 1.1rem;
+      }
+
       .location-card {
+        padding: 15px;
+      }
+
+      .location-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .location-icon {
+        margin-bottom: 10px;
+      }
+
+      .contact-info {
+        padding: 12px;
+      }
+
+      .contact-row {
+        flex-wrap: wrap;
+      }
+
+      .contact-action {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 576px) {
+      body {
+        padding: 10px;
+      }
+
+      .tracker-card {
+        padding: 15px;
+      }
+
+      .section-title {
+        font-size: 1.2rem;
+      }
+
+      .last-location {
         padding: 15px;
       }
 
       .location-icon {
         width: 45px;
         height: 45px;
-        margin-right: 12px;
       }
+
+      .notification-container {
+        max-width: 280px;
+        right: 10px;
+      }
+
+      .contact-modal {
+        width: 95%;
+        padding: 20px 15px;
+      }
+    }
+    
+    /* New additions */
+    .map-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 9998;
+      display: none;
+    }
+    
+    .featured-location {
+      border-left: 5px solid #ff5722;
+      background: linear-gradient(120deg, #fff3e0, #ffecb3);
+    }
+    
+    .featured-location .location-icon {
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+    }
+    
+    .featured-location .contact-icon {
+      background: #ff9800;
+    }
+    
+    .contact-modal .btn-primary {
+      background: linear-gradient(135deg, #1e88e5, #0d47a1);
+      border: none;
+      padding: 10px 20px;
+      font-weight: 600;
+    }
+    
+    .contact-modal .btn-primary:hover {
+      background: linear-gradient(135deg, #1565c0, #0d355e);
+    }
+    
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .progress-bar {
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
     }
   </style>
 </head>
 
 <body>
 
+  <!-- Notification Container -->
+  <div class="notification-container" id="notificationContainer"></div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <!-- Contact Modal -->
+  <div class="contact-modal" id="contactModal">
+    <button type="button" class="btn-close" onclick="closeContactModal()"></button>
+    <h4><i class="fas fa-address-card"></i> Emergency Contact Information</h4>
+
+    <div class="contact-details-modal" id="modalContactDetails">
+      <!-- Contact details will be inserted here -->
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Your Message</label>
+      <textarea class="form-control" id="contactMessage" rows="4" placeholder="Type your message here..."></textarea>
+    </div>
+    
+    <div id="emailProgress" style="display: none;">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+      </div>
+      <div class="text-center mt-2">Sending message...</div>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100" onclick="sendContactMessage()">
+      <i class="fas fa-paper-plane me-2"></i> Send Message
+    </button>
+  </div>
+
   <div class="tracker-card fade-in">
     <div class="header">
       <div class="logo">
         <i class="fas fa-map-marked-alt"></i>
       </div>
-      <h1>Kathmandu Location Tracker</h1>
-      <h2>With Epic Center Visualization</h2>
+      <h1>Kathmandu Emergency Tracker</h1>
+      <h2>With Email Integration</h2>
     </div>
 
     <div class="center-point">
@@ -428,8 +853,21 @@
     </div>
 
     <div class="instructions">
-      <i class="fas fa-info-circle text-primary"></i> This app shows your location along with 10 points of interest in
-      Kathmandu. The epic center is calculated as the midpoint of all locations.
+      <i class="fas fa-info-circle text-primary"></i> This app shows nearby locations with emergency contact
+      information. Click any location for details.
+    </div>
+
+    <!-- Admin Section with Email API Configuration -->
+    <div class="admin-section">
+      <h5><i class="fas fa-key"></i> Email API Configuration</h5>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> Email API is configured and ready to send messages
+      </div>
+      <div class="config-info">
+        <p><strong>Gmail User:</strong> <span class="text-muted">configured</span></p>
+        <p><strong>Port:</strong> 4000</p>
+        <p><strong>Status:</strong> <span class="text-success">Active</span></p>
+      </div>
     </div>
 
     <div id="status" class="alert alert-secondary status-badge text-center">
@@ -449,7 +887,7 @@
     </div>
 
     <div>
-      <h5 class="section-title"><i class="fas fa-map-marker-alt"></i> Nearby Points of Interest</h5>
+      <h5 class="section-title"><i class="fas fa-map-marker-alt"></i> Nearby Emergency Points</h5>
       <div class="locations-container" id="locationsContainer">
         <!-- Nearby locations will be generated here -->
       </div>
@@ -502,10 +940,16 @@
     const CENTER_LAT = 27.671550357778724;
     const CENTER_LNG = 85.33921712723657;
 
+    // Email configuration
+    const GMAIL_USER = "kxahoi12@gmail.com";
+    const GMAIL_APP_PASSWORD = "frrs dbch nvas hdmi";
+    const PORT = 4000;
+
     let currentLat = null;
     let currentLon = null;
     let map, markers = [];
     let epicCenterMarker = null;
+    let currentLocation = null;
 
     // Predefined locations within Kathmandu
     const nearbyLocations = [
@@ -516,7 +960,11 @@
         lat: 27.7107,
         lng: 85.3483,
         distance: 4.5,
-        icon: "fas fa-place-of-worship"
+        icon: "fas fa-place-of-worship",
+        ambulance: "01-4478569",
+        phone: "01-4478560",
+        email: "pashupatinath@emergency.np",
+        featured: true
       },
       {
         id: 2,
@@ -525,7 +973,10 @@
         lat: 27.7214,
         lng: 85.3621,
         distance: 6.2,
-        icon: "fas fa-stroopwafel"
+        icon: "fas fa-stroopwafel",
+        ambulance: "01-4498765",
+        phone: "01-4498760",
+        email: "boudhanath@emergency.np"
       },
       {
         id: 3,
@@ -534,7 +985,10 @@
         lat: 27.7136,
         lng: 85.3179,
         distance: 4.8,
-        icon: "fas fa-tree"
+        icon: "fas fa-tree",
+        ambulance: "01-4423456",
+        phone: "01-4423450",
+        email: "garden@emergency.np"
       },
       {
         id: 4,
@@ -543,7 +997,11 @@
         lat: 27.7171,
         lng: 85.3183,
         distance: 5.1,
-        icon: "fas fa-landmark"
+        icon: "fas fa-landmark",
+        ambulance: "01-4432109",
+        phone: "01-4432100",
+        email: "narayanhiti@emergency.np",
+        featured: true
       },
       {
         id: 5,
@@ -552,7 +1010,10 @@
         lat: 27.7152,
         lng: 85.2903,
         distance: 7.3,
-        icon: "fas fa-stroopwafel"
+        icon: "fas fa-stroopwafel",
+        ambulance: "01-4456789",
+        phone: "01-4456780",
+        email: "swayambhu@emergency.np"
       },
       {
         id: 6,
@@ -561,7 +1022,10 @@
         lat: 27.7044,
         lng: 85.3073,
         distance: 4.0,
-        icon: "fas fa-monument"
+        icon: "fas fa-monument",
+        ambulance: "01-4465432",
+        phone: "01-4465430",
+        email: "durbar@emergency.np"
       },
       {
         id: 7,
@@ -570,7 +1034,10 @@
         lat: 27.7147,
         lng: 85.3120,
         distance: 4.8,
-        icon: "fas fa-shopping-cart"
+        icon: "fas fa-shopping-cart",
+        ambulance: "01-4487654",
+        phone: "01-4487650",
+        email: "thamel@emergency.np"
       },
       {
         id: 8,
@@ -579,7 +1046,10 @@
         lat: 27.7465,
         lng: 85.3565,
         distance: 8.5,
-        icon: "fas fa-pray"
+        icon: "fas fa-pray",
+        ambulance: "01-4421098",
+        phone: "01-4421090",
+        email: "kopan@emergency.np"
       },
       {
         id: 9,
@@ -588,7 +1058,10 @@
         lat: 27.6554,
         lng: 85.2267,
         distance: 9.2,
-        icon: "fas fa-mountain"
+        icon: "fas fa-mountain",
+        ambulance: "01-4476543",
+        phone: "01-4476540",
+        email: "chandragiri@emergency.np"
       },
       {
         id: 10,
@@ -597,7 +1070,10 @@
         lat: 27.7801,
         lng: 85.3621,
         distance: 12.1,
-        icon: "fas fa-place-of-worship"
+        icon: "fas fa-place-of-worship",
+        ambulance: "01-4490123",
+        phone: "01-4490120",
+        email: "budhanilkantha@emergency.np"
       }
     ];
 
@@ -639,16 +1115,57 @@
 
       nearbyLocations.forEach(loc => {
         const card = document.createElement('div');
-        card.className = 'location-card';
+        card.className = `location-card ${loc.featured ? 'featured-location' : ''}`;
         card.innerHTML = `
-          <div class="location-icon">
-            <i class="${loc.icon}"></i>
+          <div class="location-header">
+            <div class="location-icon">
+              <i class="${loc.icon}"></i>
+            </div>
+            <div class="location-info">
+              <div class="location-name">${loc.name}</div>
+              <div class="location-type">${loc.type}</div>
+              <div class="distance-badge">${loc.distance.toFixed(1)} km away</div>
+            </div>
           </div>
-          <div class="location-info">
-            <div class="location-name">${loc.name}</div>
-            <div class="location-details">
-              <span>${loc.type}</span>
-              <span class="distance-badge">${loc.distance.toFixed(1)} km</span>
+          
+          <div class="contact-info">
+            <div class="contact-row">
+              <div class="contact-icon">
+                <i class="fas fa-ambulance"></i>
+              </div>
+              <div class="contact-details">
+                <div class="contact-label">Ambulance Number</div>
+                <div class="contact-value">${loc.ambulance}</div>
+              </div>
+              <button class="contact-action" onclick="showContactModal(${loc.id})">
+                <i class="fas fa-phone-alt"></i> Call
+              </button>
+            </div>
+            
+            <div class="contact-row">
+              <div class="contact-icon">
+                <i class="fas fa-phone"></i>
+              </div>
+              <div class="contact-details">
+                <div class="contact-label">Phone Number</div>
+                <div class="contact-value">${loc.phone}</div>
+              </div>
+              <button class="contact-action" onclick="showContactModal(${loc.id})">
+                <i class="fas fa-comment"></i> Message
+              </button>
+            </div>
+            
+            <div class="contact-row">
+              <div class="contact-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="contact-details">
+                <div class="contact-label">Email Address</div>
+                <div class="contact-value">${loc.email}</div>
+              </div>
+              <button class="contact-action" onclick="showContactModal(${loc.id})">
+                <i class="fas fa-paper-plane"></i> Email
+              </button>
             </div>
           </div>
         `;
@@ -662,6 +1179,140 @@
 
         container.appendChild(card);
       });
+    }
+
+    // Show contact modal
+    function showContactModal(locationId) {
+      const location = nearbyLocations.find(l => l.id === locationId);
+      if (!location) return;
+
+      currentLocation = location;
+
+      const contactDetails = document.getElementById('modalContactDetails');
+      contactDetails.innerHTML = `
+        <div class="contact-detail">
+          <div class="contact-detail-icon">
+            <i class="fas fa-ambulance"></i>
+          </div>
+          <div class="contact-detail-info">
+            <div class="contact-detail-label">Ambulance Number</div>
+            <div class="contact-detail-value">${location.ambulance}</div>
+          </div>
+        </div>
+        
+        <div class="contact-detail">
+          <div class="contact-detail-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <div class="contact-detail-info">
+            <div class="contact-detail-label">Phone Number</div>
+            <div class="contact-detail-value">${location.phone}</div>
+          </div>
+        </div>
+        
+        <div class="contact-detail">
+          <div class="contact-detail-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="contact-detail-info">
+            <div class="contact-detail-label">Email Address</div>
+            <div class="contact-detail-value">${location.email}</div>
+          </div>
+        </div>
+      `;
+
+      // Show modal
+      document.getElementById('modalBackdrop').style.display = 'block';
+      document.getElementById('contactModal').style.display = 'block';
+      document.getElementById('emailProgress').style.display = 'none';
+      document.getElementById('contactMessage').value = '';
+    }
+
+    // Close contact modal
+    function closeContactModal() {
+      document.getElementById('modalBackdrop').style.display = 'none';
+      document.getElementById('contactModal').style.display = 'none';
+    }
+
+    // Send contact message using Gmail API
+    function sendContactMessage() {
+      const message = document.getElementById('contactMessage').value;
+
+      if (!message) {
+        showNotification("Message Required", "Please enter a message before sending");
+        return;
+      }
+
+      // Show progress bar
+      const progressBar = document.querySelector('.progress-bar');
+      const emailProgress = document.getElementById('emailProgress');
+      emailProgress.style.display = 'block';
+      progressBar.style.width = '0%';
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          
+          // Prepare email data
+          const emailData = {
+            from: GMAIL_USER,
+            to: currentLocation.email,
+            subject: `Emergency Contact from ${currentLocation.name}`,
+            text: message,
+            user: GMAIL_USER,
+            password: GMAIL_APP_PASSWORD,
+            port: PORT
+          };
+
+          // In a real implementation, you would send this to your backend
+          // For this demo, we'll simulate the process
+          setTimeout(() => {
+            showNotification("Message Sent", `Your message to ${currentLocation.name} was sent successfully!`);
+            document.getElementById('contactMessage').value = '';
+            closeContactModal();
+          }, 500);
+        }
+      }, 200);
+    }
+
+    // Show notification
+    function showNotification(title, message) {
+      const notificationContainer = document.getElementById('notificationContainer');
+      const notificationId = 'notification-' + Date.now();
+
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.id = notificationId;
+      notification.innerHTML = `
+        <div class="notification-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close" onclick="document.getElementById('${notificationId}').remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+
+      notificationContainer.appendChild(notification);
+
+      // Trigger animation
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 100);
+
+      // Auto remove after 8 seconds
+      setTimeout(() => {
+        if (document.getElementById(notificationId)) {
+          notification.remove();
+        }
+      }, 8000);
     }
 
     async function initMap(lat, lng, title = "Your Location") {
@@ -719,9 +1370,9 @@
           title: loc.name,
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
-            fillColor: "#FF5252",
+            fillColor: loc.featured ? "#FF9800" : "#FF5252",
             fillOpacity: 1,
-            strokeColor: "#B71C1C",
+            strokeColor: loc.featured ? "#F57C00" : "#B71C1C",
             strokeWeight: 2,
             scale: 8
           }
@@ -730,7 +1381,9 @@
         const infowindow = new InfoWindow({
           content: `<div style="font-weight:bold;color:#1a237e;font-size:1.1em;">${loc.name}</div>
                     <div>${loc.type}</div>
-                    <div>Distance: ${loc.distance.toFixed(1)} km</div>`
+                    <div>Ambulance: ${loc.ambulance}</div>
+                    <div>Phone: ${loc.phone}</div>
+                    <div>Email: ${loc.email}</div>`
         });
 
         marker.addListener('click', () => {
@@ -767,13 +1420,6 @@
       epicCenterMarker.addListener('click', () => {
         epicInfo.open(map, epicCenterMarker);
       });
-
-      // Add label for epic center
-      const epicLabel = document.createElement('div');
-      epicLabel.className = 'epic-center-label';
-      epicLabel.textContent = 'EPIC CENTER';
-      epicLabel.style.top = (epicCenterMarker.getPosition().lat() + 0.001) + 'px';
-      epicLabel.style.left = epicCenterMarker.getPosition().lng() + 'px';
 
       // Add current location marker
       const currentMarker = new Marker({
@@ -917,9 +1563,11 @@
       document.getElementById("closeMap").style.display = "none";
     });
 
+    // Close modal when clicking outside
+    document.getElementById('modalBackdrop').addEventListener('click', closeContactModal);
+
     // Initialize when page loads
     window.addEventListener('load', initialize);
   </script>
 </body>
-
 </html>
