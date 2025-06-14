@@ -2,6 +2,7 @@ const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
 require("dotenv").config();
+const sendRoute = require("./routes/getRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Email sending API endpoint
+app.use("/send", sendRoute);
 app.post("/send-email", async (req, res) => {
   try {
     const { to, subject, text, html, from } = req.body;

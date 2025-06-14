@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-// Combined FileUpload and LivePreview component
+/** --- Combined Detection Component --- **/
 const CombinedDetection = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -16,33 +16,30 @@ const CombinedDetection = () => {
   const [processedFrames, setProcessedFrames] = useState(0);
   const fileInputRef = useRef();
 
-  // Check current video status on component mount
+  // Server video state
   useEffect(() => {
     checkCurrentVideo();
   }, []);
 
-  // Update progress when frames change
+  // Progress bar animation
   useEffect(() => {
     if (totalFrames > 0) {
-      const progressPercentage = (processedFrames / totalFrames) * 100;
-      setProgress(progressPercentage);
+      setProgress((processedFrames / totalFrames) * 100);
     }
   }, [processedFrames, totalFrames]);
 
-  // Blinking effect when accident is detected
+  // Blinking effect on accident detected
   useEffect(() => {
     if (result?.accident_detected) {
       setIsBlinking(true);
-      const blinkInterval = setInterval(() => {
-        setIsBlinking((prev) => !prev);
-      }, 500);
-
-      // Stop blinking after 10 seconds
+      const blinkInterval = setInterval(
+        () => setIsBlinking((prev) => !prev),
+        500
+      );
       const stopBlinking = setTimeout(() => {
         clearInterval(blinkInterval);
         setIsBlinking(false);
       }, 10000);
-
       return () => {
         clearInterval(blinkInterval);
         clearTimeout(stopBlinking);
@@ -50,14 +47,59 @@ const CombinedDetection = () => {
     }
   }, [result?.accident_detected]);
 
-  // Email notification function
+  // Helper: Reset all states and video
+  const resetUpload = async () => {
+    setSelectedFile(null);
+    setResult(null);
+    setIsLiveActive(false);
+    setIsBlinking(false);
+    setProcessingStatus("");
+    setProgress(0);
+    setTotalFrames(0);
+    setProcessedFrames(0);
+    // Clear live video on backend
+    try {
+      await fetch("http://localhost:8000/clear-live-video", {
+        method: "DELETE",
+      });
+      setCurrentVideo(null);
+      setStreamKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error clearing live video:", error);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Helper: Simulate video progress
+  const simulateFrameProgress = (totalFrameCount) => {
+    setTotalFrames(totalFrameCount);
+    setProcessedFrames(0);
+    const progressInterval = setInterval(() => {
+      setProcessedFrames((prev) => {
+        const newCount = prev + Math.floor(Math.random() * 5) + 1;
+        if (newCount >= totalFrameCount) {
+          clearInterval(progressInterval);
+          return totalFrameCount;
+        }
+        return newCount;
+      });
+    }, 100);
+    return progressInterval;
+  };
+
+  // Helper: Send email and LED alert
+  const handleAccidentAlert = async (signal) => {
+    setProcessingStatus("📧 Sending accident alert...");
+    await sendAccidentAlert();
+    await sendLedSignal(signal);
+  };
+
+  // Email notification
   const sendAccidentAlert = async () => {
     try {
       const response = await fetch("http://localhost:4000/send-email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: "Accident detected in uploaded media",
           timestamp: new Date().toISOString(),
@@ -66,37 +108,38 @@ const CombinedDetection = () => {
           fileName: selectedFile?.name || "unknown",
         }),
       });
-
-      if (!response.ok) {
-        console.error("Failed to send email notification");
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        console.log("Email notification sent successfully");
-        setProcessingStatus("📧 Accident alert sent successfully!");
-      }
+      setProcessingStatus("📧 Accident alert sent successfully!");
     } catch (error) {
-      console.error("Error sending email notification:", error);
       setProcessingStatus("⚠️ Alert sent but email notification failed");
     }
   };
 
+  // LED signal
+  const sendLedSignal = async (signal) => {
+    try {
+      const response = await fetch("http://localhost:4000/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signal }),
+      });
+      if (!response.ok) throw new Error();
+    } catch {}
+  };
+
+  // Check backend's current video
   const checkCurrentVideo = async () => {
     try {
       const response = await fetch("http://localhost:8000/current-live-video");
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentVideo(data);
-      }
-    } catch (error) {
-      console.error("Error checking current video:", error);
-    }
+      if (response.ok) setCurrentVideo(await response.json());
+    } catch {}
   };
 
+  // File validation and upload state reset
   const handleFiles = (files) => {
     const file = files[0];
     if (!file) return;
-
-    // Check file type
     const validTypes = [
       "image/jpeg",
       "image/jpg",
@@ -110,18 +153,13 @@ const CombinedDetection = () => {
       "video/webm",
     ];
     if (!validTypes.includes(file.type)) {
-      alert(
-        "❌ Please upload a valid image (JPG, PNG) or video (MP4, AVI, MOV, MKV, WMV, FLV, WEBM) file"
-      );
+      alert("❌ Please upload a valid image (JPG, PNG) or video file");
       return;
     }
-
-    // Check file size (max 200MB)
     if (file.size > 200 * 1024 * 1024) {
       alert("❌ File size must be less than 200MB");
       return;
     }
-
     setSelectedFile(file);
     setResult(null);
     setIsBlinking(false);
@@ -131,56 +169,27 @@ const CombinedDetection = () => {
     setProcessedFrames(0);
   };
 
+  // Drag and drop handlers
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    setDragActive(e.type === "dragenter" || e.type === "dragover");
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0])
       handleFiles(e.dataTransfer.files);
-    }
   };
-
   const handleChange = (e) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFiles(e.target.files);
-    }
+    if (e.target.files && e.target.files[0]) handleFiles(e.target.files);
   };
 
-  // Simulate frame processing progress for videos
-  const simulateFrameProgress = (totalFrameCount) => {
-    setTotalFrames(totalFrameCount);
-    setProcessedFrames(0);
-
-    const progressInterval = setInterval(() => {
-      setProcessedFrames((prev) => {
-        const newCount = prev + Math.floor(Math.random() * 5) + 1;
-        if (newCount >= totalFrameCount) {
-          clearInterval(progressInterval);
-          return totalFrameCount;
-        }
-        return newCount;
-      });
-    }, 100);
-
-    return progressInterval;
-  };
-
-  // Combined function for detection and live preview with email notification
+  /** Handle upload, detection, live stream and accident actions **/
   const processFileAndStartLive = async () => {
     if (!selectedFile) return;
-
     setIsProcessing(true);
     setResult(null);
     setIsBlinking(false);
@@ -189,12 +198,10 @@ const CombinedDetection = () => {
     try {
       const formData = new FormData();
       const isVideo = selectedFile.type.startsWith("video/");
-
       if (isVideo) {
-        // Step 1: Upload for live preview first
         setProcessingStatus("⏳ Uploading video for live preview...");
         formData.append("video", selectedFile);
-
+        // Step 1: Upload for live view
         const liveResponse = await fetch(
           "http://localhost:8000/upload-live-video",
           {
@@ -202,29 +209,23 @@ const CombinedDetection = () => {
             body: formData,
           }
         );
-
-        if (!liveResponse.ok) {
+        if (!liveResponse.ok)
           throw new Error("Failed to upload video for live preview");
-        }
 
-        // Step 2: Start live preview immediately
         setProcessingStatus("🎥 Starting live detection stream...");
         setIsLiveActive(true);
         setStreamKey((prev) => prev + 1);
         await checkCurrentVideo();
 
-        // Step 3: Process for detection analysis with progress tracking
         setProcessingStatus("⏳ Processing video frames...");
-
-        // Estimate frame count (rough calculation)
+        // Progress bar simulation
         const estimatedFrames = Math.floor(
           (selectedFile.size / 1024 / 1024) * 30
-        ); // Rough estimate
+        );
         const progressInterval = simulateFrameProgress(estimatedFrames);
 
         const detectFormData = new FormData();
         detectFormData.append("video", selectedFile);
-
         const detectResponse = await fetch(
           "http://localhost:8000/detect-video",
           {
@@ -232,7 +233,6 @@ const CombinedDetection = () => {
             body: detectFormData,
           }
         );
-
         clearInterval(progressInterval);
 
         if (!detectResponse.ok) {
@@ -243,59 +243,37 @@ const CombinedDetection = () => {
         }
 
         const detectData = await detectResponse.json();
-        const videoResult = {
-          type: "video",
-          ...detectData,
-        };
-
+        const videoResult = { type: "video", ...detectData };
         setResult(videoResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
 
-        // Send email notification if accident is detected
-        if (videoResult.accident_detected) {
-          setProcessingStatus("📧 Sending accident alert...");
-          await sendAccidentAlert();
-        }
+        if (videoResult.accident_detected) await handleAccidentAlert("0"); // LED ON (accident detected)
       } else {
-        // For images, show simple progress
         setProcessingStatus("⏳ Processing image analysis...");
         setProgress(25);
 
         formData.append("frame", selectedFile);
-
         const response = await fetch("http://localhost:8000/detect", {
           method: "POST",
           body: formData,
         });
-
         setProgress(75);
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
           throw new Error(
             errorData?.detail || `HTTP error! status: ${response.status}`
           );
         }
-
         const data = await response.json();
-        const imageResult = {
-          type: "image",
-          ...data,
-        };
-
+        const imageResult = { type: "image", ...data };
         setResult(imageResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
 
-        // Send email notification if accident is detected
-        if (imageResult.accident_detected) {
-          setProcessingStatus("📧 Sending accident alert...");
-          await sendAccidentAlert();
-        }
+        if (imageResult.accident_detected) await handleAccidentAlert("1"); // LED ON (accident detected)
       }
     } catch (error) {
-      console.error("Error processing file:", error);
       setResult({
         type: "error",
         message:
@@ -306,7 +284,6 @@ const CombinedDetection = () => {
       setProgress(0);
     } finally {
       setIsProcessing(false);
-      // Clear processing status after 3 seconds
       setTimeout(() => {
         setProcessingStatus("");
         setProgress(0);
@@ -316,34 +293,9 @@ const CombinedDetection = () => {
     }
   };
 
-  const resetUpload = async () => {
-    setSelectedFile(null);
-    setResult(null);
-    setIsLiveActive(false);
-    setIsBlinking(false);
-    setProcessingStatus("");
-    setProgress(0);
-    setTotalFrames(0);
-    setProcessedFrames(0);
-
-    // Clear live video
-    try {
-      await fetch("http://localhost:8000/clear-live-video", {
-        method: "DELETE",
-      });
-      setCurrentVideo(null);
-      setStreamKey((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error clearing live video:", error);
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   const isVideo = selectedFile?.type.startsWith("video/");
 
+  /** --- RENDER --- **/
   return (
     <div
       style={{
@@ -374,7 +326,7 @@ const CombinedDetection = () => {
       >
         {isBlinking && result?.accident_detected
           ? "🚨 ACCIDENT ALERT! 🚨"
-          : "🚗 AI Detection & Live Preview"}
+          : " Detection & Live Preview"}
       </h2>
 
       {/* Upload Area */}
@@ -506,73 +458,6 @@ const CombinedDetection = () => {
             </div>
           )}
 
-          {/* Progress Bar */}
-          {isProcessing && (
-            <div style={{ marginBottom: "20px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px",
-                }}
-              >
-                <span style={{ fontSize: "14px", color: "#666" }}>
-                  {isVideo ? "Frame Processing Progress" : "Analysis Progress"}
-                </span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {progress.toFixed(1)}%
-                </span>
-              </div>
-
-              {/* Progress Bar Container */}
-              <div
-                style={{
-                  width: "100%",
-                  height: "20px",
-                  backgroundColor: "#e0e0e0",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  border: "2px solid #ddd",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${progress}%`,
-                    height: "100%",
-                    backgroundColor: progress === 100 ? "#28a745" : "#2196f3",
-                    borderRadius: "8px",
-                    transition: "width 0.3s ease",
-                    background:
-                      progress === 100
-                        ? "#28a745"
-                        : "linear-gradient(90deg, #2196f3 0%, #21cbf3 50%, #2196f3 100%)",
-                    backgroundSize: "200% 100%",
-                    animation:
-                      progress < 100
-                        ? "progressAnimation 2s linear infinite"
-                        : "none",
-                  }}
-                />
-              </div>
-
-              {/* Frame Counter for Videos */}
-              {isVideo && totalFrames > 0 && (
-                <div style={{ textAlign: "center", marginTop: "8px" }}>
-                  <small style={{ color: "#666" }}>
-                    Frames: {processedFrames} / {totalFrames}
-                  </small>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Single Combined Button */}
           <div style={{ textAlign: "center" }}>
             <button
@@ -596,7 +481,7 @@ const CombinedDetection = () => {
             >
               {isProcessing
                 ? "⏳ Processing..."
-                : `🔍 Start Analysis ${isVideo ? "& Live Detection" : ""}`}
+                : `🔍 Start Analysis${isVideo ? " & Live Detection" : ""}`}
             </button>
           </div>
         </div>
@@ -748,7 +633,6 @@ const CombinedDetection = () => {
                     } frames processed.`
                   : "Image analysis complete."}
               </p>
-
               {result.confidence && (
                 <p
                   style={{
@@ -763,7 +647,6 @@ const CombinedDetection = () => {
                   {(result.confidence * 100).toFixed(1)}%
                 </p>
               )}
-
               {result.accident_detected && (
                 <div
                   style={{
@@ -799,11 +682,10 @@ const CombinedDetection = () => {
   );
 };
 
-// Main App component
+/** --- App Root Component --- **/
 const App = () => {
   const [serverStatus, setServerStatus] = useState(null);
 
-  // Check server health on component mount
   useEffect(() => {
     checkServerHealth();
   }, []);
@@ -812,11 +694,9 @@ const App = () => {
     try {
       const response = await fetch("http://localhost:8000/health");
       if (response.ok) {
-        const data = await response.json();
-        setServerStatus(data);
+        setServerStatus(await response.json());
       }
     } catch (error) {
-      console.error("Server health check failed:", error);
       setServerStatus({
         status: "error",
         message: "Cannot connect to server",
@@ -826,7 +706,7 @@ const App = () => {
 
   return (
     <div style={{ maxWidth: 1000, margin: "40px auto", padding: 20 }}>
-      {/* Add CSS for progress bar animation */}
+      {/* Progress Bar Animation CSS */}
       <style>
         {`
           @keyframes progressAnimation {
@@ -835,7 +715,6 @@ const App = () => {
           }
         `}
       </style>
-
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <h1 style={{ color: "#333", marginBottom: "10px" }}>
@@ -844,7 +723,6 @@ const App = () => {
         <p style={{ color: "#666", fontSize: "18px" }}>
           Real-time analysis with automated email alerts
         </p>
-
         {/* Server Status */}
         {serverStatus && (
           <div
@@ -871,10 +749,7 @@ const App = () => {
           </div>
         )}
       </div>
-
-      {/* Combined Component */}
       <CombinedDetection />
-
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "40px", color: "#666" }}>
         <p>
