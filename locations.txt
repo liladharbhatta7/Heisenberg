@@ -2,3 +2,4 @@
 {'device_id': 'browser-001', 'latitude': 27.67155801535249, 'longitude': 85.3392059590726, 'timestamp': '2025-06-14T10:38:36.430Z'}
 {'device_id': 'browser-001', 'latitude': 27.671576782459233, 'longitude': 85.33919782760904, 'timestamp': '2025-06-14T11:32:07.628Z'}
 {'device_id': 'browser-001', 'latitude': 27.67159334856262, 'longitude': 85.33926882578977, 'timestamp': '2025-06-14T13:43:10.036Z'}
+{'device_id': 'browser-001', 'latitude': 27.671550357778724, 'longitude': 85.33921712723657, 'timestamp': '2025-06-14T18:10:21.153Z'}

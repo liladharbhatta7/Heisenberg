@@ -6,7 +6,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
-from process_video import process_video
+from .process_video import process_video
 from ultralytics import YOLO
 import threading
 import time
