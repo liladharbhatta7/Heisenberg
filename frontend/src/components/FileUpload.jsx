@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import KathmanduEmergencyTracker from "../components/Map"; // <-- Update this path if needed
 
-/** --- Combined Detection Component --- **/
 const CombinedDetection = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -16,19 +16,16 @@ const CombinedDetection = () => {
   const [processedFrames, setProcessedFrames] = useState(0);
   const fileInputRef = useRef();
 
-  // Server video state
   useEffect(() => {
     checkCurrentVideo();
   }, []);
 
-  // Progress bar animation
   useEffect(() => {
     if (totalFrames > 0) {
       setProgress((processedFrames / totalFrames) * 100);
     }
   }, [processedFrames, totalFrames]);
 
-  // Blinking effect on accident detected
   useEffect(() => {
     if (result?.accident_detected) {
       setIsBlinking(true);
@@ -47,51 +44,18 @@ const CombinedDetection = () => {
     }
   }, [result?.accident_detected]);
 
-  // Helper: Reset all states and video
-  const resetUpload = async () => {
-    setSelectedFile(null);
-    setResult(null);
-    setIsLiveActive(false);
-    setIsBlinking(false);
-    setProcessingStatus("");
-    setProgress(0);
-    setTotalFrames(0);
-    setProcessedFrames(0);
-    // Clear live video on backend
+  // LED signal sender (fixed, with error logging)
+  const sendLedSignal = async (signal) => {
     try {
-      await fetch("http://localhost:8000/clear-live-video", {
-        method: "DELETE",
+      const response = await fetch("http://localhost:4000/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signal }),
       });
-      setCurrentVideo(null);
-      setStreamKey((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error clearing live video:", error);
+      if (!response.ok) throw new Error("LED signal failed");
+    } catch (err) {
+      console.error("Error sending LED signal:", err);
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  // Helper: Simulate video progress
-  const simulateFrameProgress = (totalFrameCount) => {
-    setTotalFrames(totalFrameCount);
-    setProcessedFrames(0);
-    const progressInterval = setInterval(() => {
-      setProcessedFrames((prev) => {
-        const newCount = prev + Math.floor(Math.random() * 5) + 1;
-        if (newCount >= totalFrameCount) {
-          clearInterval(progressInterval);
-          return totalFrameCount;
-        }
-        return newCount;
-      });
-    }, 100);
-    return progressInterval;
-  };
-
-  // Helper: Send email and LED alert
-  const handleAccidentAlert = async (signal) => {
-    setProcessingStatus("📧 Sending accident alert...");
-    await sendAccidentAlert();
-    await sendLedSignal(signal);
   };
 
   // Email notification
@@ -116,19 +80,13 @@ const CombinedDetection = () => {
     }
   };
 
-  // LED signal
-  const sendLedSignal = async (signal) => {
-    try {
-      const response = await fetch("http://localhost:4000/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signal }),
-      });
-      if (!response.ok) throw new Error();
-    } catch {}
+  // Combined accident alert (email + LED)
+  const handleAccidentAlert = async (signal) => {
+    setProcessingStatus("📧 Sending accident alert...");
+    await sendAccidentAlert();
+    await sendLedSignal(signal);
   };
 
-  // Check backend's current video
   const checkCurrentVideo = async () => {
     try {
       const response = await fetch("http://localhost:8000/current-live-video");
@@ -136,7 +94,43 @@ const CombinedDetection = () => {
     } catch {}
   };
 
-  // File validation and upload state reset
+  const resetUpload = async () => {
+    setSelectedFile(null);
+    setResult(null);
+    setIsLiveActive(false);
+    setIsBlinking(false);
+    setProcessingStatus("");
+    setProgress(0);
+    setTotalFrames(0);
+    setProcessedFrames(0);
+    try {
+      await fetch("http://localhost:8000/clear-live-video", {
+        method: "DELETE",
+      });
+      setCurrentVideo(null);
+      setStreamKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error clearing live video:", error);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const simulateFrameProgress = (totalFrameCount) => {
+    setTotalFrames(totalFrameCount);
+    setProcessedFrames(0);
+    const progressInterval = setInterval(() => {
+      setProcessedFrames((prev) => {
+        const newCount = prev + Math.floor(Math.random() * 5) + 1;
+        if (newCount >= totalFrameCount) {
+          clearInterval(progressInterval);
+          return totalFrameCount;
+        }
+        return newCount;
+      });
+    }, 100);
+    return progressInterval;
+  };
+
   const handleFiles = (files) => {
     const file = files[0];
     if (!file) return;
@@ -169,7 +163,6 @@ const CombinedDetection = () => {
     setProcessedFrames(0);
   };
 
-  // Drag and drop handlers
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -187,7 +180,6 @@ const CombinedDetection = () => {
     if (e.target.files && e.target.files[0]) handleFiles(e.target.files);
   };
 
-  /** Handle upload, detection, live stream and accident actions **/
   const processFileAndStartLive = async () => {
     if (!selectedFile) return;
     setIsProcessing(true);
@@ -201,7 +193,6 @@ const CombinedDetection = () => {
       if (isVideo) {
         setProcessingStatus("⏳ Uploading video for live preview...");
         formData.append("video", selectedFile);
-        // Step 1: Upload for live view
         const liveResponse = await fetch(
           "http://localhost:8000/upload-live-video",
           {
@@ -211,19 +202,15 @@ const CombinedDetection = () => {
         );
         if (!liveResponse.ok)
           throw new Error("Failed to upload video for live preview");
-
         setProcessingStatus("🎥 Starting live detection stream...");
         setIsLiveActive(true);
         setStreamKey((prev) => prev + 1);
         await checkCurrentVideo();
-
         setProcessingStatus("⏳ Processing video frames...");
-        // Progress bar simulation
         const estimatedFrames = Math.floor(
           (selectedFile.size / 1024 / 1024) * 30
         );
         const progressInterval = simulateFrameProgress(estimatedFrames);
-
         const detectFormData = new FormData();
         detectFormData.append("video", selectedFile);
         const detectResponse = await fetch(
@@ -234,25 +221,21 @@ const CombinedDetection = () => {
           }
         );
         clearInterval(progressInterval);
-
         if (!detectResponse.ok) {
           const errorData = await detectResponse.json().catch(() => null);
           throw new Error(
             errorData?.detail || `HTTP error! status: ${detectResponse.status}`
           );
         }
-
         const detectData = await detectResponse.json();
         const videoResult = { type: "video", ...detectData };
         setResult(videoResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
-
-        if (videoResult.accident_detected) await handleAccidentAlert("0"); // LED ON (accident detected)
+        if (videoResult.accident_detected) await handleAccidentAlert("0"); // LED ON (signal "0")
       } else {
         setProcessingStatus("⏳ Processing image analysis...");
         setProgress(25);
-
         formData.append("frame", selectedFile);
         const response = await fetch("http://localhost:8000/detect", {
           method: "POST",
@@ -270,8 +253,7 @@ const CombinedDetection = () => {
         setResult(imageResult);
         setProcessingStatus("✅ Analysis complete!");
         setProgress(100);
-
-        if (imageResult.accident_detected) await handleAccidentAlert("1"); // LED ON (accident detected)
+        if (imageResult.accident_detected) await handleAccidentAlert("1"); // LED ON (signal "1")
       }
     } catch (error) {
       setResult({
@@ -295,7 +277,6 @@ const CombinedDetection = () => {
 
   const isVideo = selectedFile?.type.startsWith("video/");
 
-  /** --- RENDER --- **/
   return (
     <div
       style={{
@@ -326,7 +307,7 @@ const CombinedDetection = () => {
       >
         {isBlinking && result?.accident_detected
           ? "🚨 ACCIDENT ALERT! 🚨"
-          : " Detection & Live Preview"}
+          : "Detection & Live Preview"}
       </h2>
 
       {/* Upload Area */}
@@ -457,6 +438,8 @@ const CombinedDetection = () => {
               {processingStatus}
             </div>
           )}
+
+          {/* Progress Bar */}
 
           {/* Single Combined Button */}
           <div style={{ textAlign: "center" }}>
@@ -674,6 +657,8 @@ const CombinedDetection = () => {
                   </p>
                 </div>
               )}
+              {/* Show map on accident */}
+              {result.accident_detected && <KathmanduEmergencyTracker />}
             </div>
           )}
         </div>
@@ -682,7 +667,6 @@ const CombinedDetection = () => {
   );
 };
 
-/** --- App Root Component --- **/
 const App = () => {
   const [serverStatus, setServerStatus] = useState(null);
 
@@ -706,7 +690,6 @@ const App = () => {
 
   return (
     <div style={{ maxWidth: 1000, margin: "40px auto", padding: 20 }}>
-      {/* Progress Bar Animation CSS */}
       <style>
         {`
           @keyframes progressAnimation {
@@ -715,7 +698,6 @@ const App = () => {
           }
         `}
       </style>
-      {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <h1 style={{ color: "#333", marginBottom: "10px" }}>
           Accident Detection System by team Team Heisenberg
@@ -723,7 +705,6 @@ const App = () => {
         <p style={{ color: "#666", fontSize: "18px" }}>
           Real-time analysis with automated email alerts
         </p>
-        {/* Server Status */}
         {serverStatus && (
           <div
             style={{
@@ -750,7 +731,6 @@ const App = () => {
         )}
       </div>
       <CombinedDetection />
-      {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "40px", color: "#666" }}>
         <p>
           <strong>Team Heisenberg</strong> | Automatic Accident Detection &

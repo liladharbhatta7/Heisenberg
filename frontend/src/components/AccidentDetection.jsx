@@ -29,7 +29,7 @@ const AccidentDetection = () => {
             fontWeight: "bold",
           }}
         >
-          🚨 YOLOv8 Accident Detection System
+          🚨 Accident Detection System
         </h1>
         <p
           style={{
@@ -37,7 +37,7 @@ const AccidentDetection = () => {
             fontSize: "1.1rem",
           }}
         >
-          Real-time detection of accidents using YOLOv8 and computer vision.
+          Real-time detection of accidents using computer vision.
         </p>
       </div>
 
